@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<title>春日部大冒险 · 小新跑酷</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" width="960" height="520"></canvas>
+
+  <div id="hud" class="hidden">
+    <div class="hud-row">
+      <div class="hud-chip"><span id="hud-char">小新</span><span id="hud-lives" class="lives"></span></div>
+      <div class="hud-chip">分数 <b id="hud-score">0</b></div>
+      <div class="hud-chip">金币 <b id="hud-coins">0</b></div>
+      <div class="hud-chip">关卡 <b id="hud-level">1</b></div>
+      <div class="hud-chip">时间 <b id="hud-time">300</b></div>
+      <button id="btn-pause" class="mini-btn" title="暂停 (Esc)">❚❚</button>
+    </div>
+    <div id="skill-box"><div id="skill-fill"></div><span id="skill-label">技能</span></div>
+  </div>
+
+  <section id="screen-title" class="screen">
+    <h1>春日部大冒险</h1>
+    <p class="sub">小新跑酷 · 横版冒险</p>
+    <button id="btn-start" class="big-btn">开始游戏</button>
+    <button id="btn-continue" class="ghost-btn hidden">继续冒险</button>
+    <button id="btn-rank" class="ghost-btn">排行榜</button>
+    <div class="opts">
+      <label><input type="checkbox" id="opt-sfx" checked /> 音效</label>
+      <label><input type="checkbox" id="opt-bgm" checked /> 背景音乐</label>
+      <label><input type="checkbox" id="opt-voice" checked /> 角色声线</label>
+    </div>
+    <div class="help">← → / A D 移动　空格 / ↑ / W 跳跃（可二段跳）　Shift / J 技能　Esc 暂停</div>
+    <p class="tip">手机端会自动显示虚拟按键；首次点击页面后声音才会启用</p>
+    <p class="disclaimer">非官方同人练习作品 · 角色形象为原创卡通绘制 · 音频由程序合成</p>
+  </section>
+
+  <section id="screen-select" class="screen hidden">
+    <h2>选择角色</h2>
+    <div id="char-list"></div>
+    <div class="sel-actions">
+      <button id="btn-back-title" class="ghost-btn">返回</button>
+      <button id="btn-go" class="big-btn">开始冒险</button>
+    </div>
+  </section>
+
+  <section id="screen-pause" class="screen hidden">
+    <h2>暂停</h2>
+    <div class="sel-actions">
+      <button id="btn-resume" class="big-btn">继续</button>
+      <button id="btn-restart" class="ghost-btn">重玩本关</button>
+      <button id="btn-quit" class="ghost-btn">返回标题</button>
+    </div>
+  </section>
+
+  <section id="screen-result" class="screen hidden">
+    <h2 id="result-title">关卡完成！</h2>
+    <div id="result-body"></div>
+    <div id="rank-line" class="rank-line"></div>
+    <div class="name-row">
+      <label for="player-name">榜上昵称</label>
+      <input id="player-name" type="text" maxlength="12" placeholder="小新" autocomplete="off" />
+      <button id="btn-submit-score" class="ghost-btn">提交成绩</button>
+    </div>
+    <div class="sel-actions">
+      <button id="btn-next" class="big-btn">下一关</button>
+      <button id="btn-retry" class="ghost-btn">再来一次</button>
+      <button id="btn-home" class="ghost-btn">返回标题</button>
+    </div>
+  </section>
+
+  <section id="screen-rank" class="screen hidden">
+    <h2>排行榜</h2>
+    <div class="rank-tabs">
+      <button class="rank-tab active" data-level="">全部</button>
+      <button class="rank-tab" data-level="0">关卡 1</button>
+      <button class="rank-tab" data-level="1">关卡 2</button>
+      <button class="rank-tab" data-level="2">关卡 3</button>
+    </div>
+    <div id="rank-body"></div>
+    <div id="rank-status" class="rank-status"></div>
+    <div class="sel-actions">
+      <button id="btn-rank-refresh" class="ghost-btn">刷新</button>
+      <button id="btn-rank-back" class="big-btn">返回</button>
+    </div>
+  </section>
+
+  <div id="bubble" class="hidden"></div>
+
+  <div id="touch" class="hidden">
+    <div class="pad left">
+      <button class="tbtn" data-key="left">◀</button>
+      <button class="tbtn" data-key="right">▶</button>
+    </div>
+    <div class="pad right">
+      <button class="tbtn skill" data-key="skill">技能</button>
+      <button class="tbtn jump" data-key="jump">跳</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/levels.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/input.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
