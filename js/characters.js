@@ -96,6 +96,25 @@
 
   /* ---------------- 绘制 ---------------- */
 
+  function strokeShape(g, color, width) {
+    g.strokeStyle = color;
+    g.lineWidth = width;
+    g.lineJoin = 'round';
+    g.lineCap = 'round';
+    g.stroke();
+  }
+
+  function fillCircle(g, x, y, r) {
+    g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill();
+  }
+
+  function outlineCircle(g, x, y, r, fillStyle, strokeStyle, lineW) {
+    g.fillStyle = fillStyle;
+    g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill();
+    g.strokeStyle = strokeStyle; g.lineWidth = lineW || 1.2;
+    g.beginPath(); g.arc(x, y, r, 0, TAU); g.stroke();
+  }
+
   function hairCap(g, color, cy, r) {
     g.fillStyle = color;
     g.beginPath();
@@ -131,51 +150,55 @@
         });
         bangFringe(g, P.hair, cy, r);
         break;
-      case 'bowl': // 风间：整齐短发
+      case 'bowl': // 风间：整齐短发 + 一撮标志性刘海
         hairCap(g, P.hair, cy, r);
         g.fillStyle = P.hair;
-        S.roundRect(g, -r - 1, cy - 4, (r + 1) * 2, 6, 2); g.fill();
+        // 额前斜刘海
         g.beginPath();
-        g.moveTo(-r - 1, cy - r * 0.4);
-        g.lineTo(-r + 1, cy + 6);
-        g.lineTo(-r + 4, cy - r * 0.2);
-        g.closePath(); g.fill();
-        g.beginPath();
-        g.moveTo(r + 1, cy - r * 0.4);
-        g.lineTo(r - 1, cy + 6);
-        g.lineTo(r - 4, cy - r * 0.2);
-        g.closePath(); g.fill();
+        g.moveTo(-r - 1, cy - 2);
+        g.quadraticCurveTo(-r * 0.3, cy - r - 3, r + 1, cy - 3);
+        g.lineTo(r + 1, cy + 1);
+        g.quadraticCurveTo(r * 0.4, cy - r * 0.3, -r * 0.4, cy - 1);
+        g.closePath();
+        g.fill();
+        // 两侧鬓角
+        S.roundRect(g, -r - 2, cy - 4, 4, 10, 2); g.fill();
+        S.roundRect(g, r - 2, cy - 4, 4, 10, 2); g.fill();
         break;
       case 'twin': // 妮妮：长发 + 蝴蝶结
         g.fillStyle = P.hair;
-        S.roundRect(g, -r - 3, cy - 4, 6, 22, 3); g.fill();
-        S.roundRect(g, r - 3, cy - 4, 6, 22, 3); g.fill();
+        S.roundRect(g, -r - 3, cy - 4, 6, 24, 3); g.fill();
+        S.roundRect(g, r - 3, cy - 4, 6, 24, 3); g.fill();
         hairCap(g, P.hair, cy, r);
         bangFringe(g, P.hair, cy, r);
         g.fillStyle = P.accent;
+        // 双马尾蝴蝶结
         [-1, 1].forEach(function (s) {
           g.beginPath();
-          g.moveTo(s * (r - 2), cy - r - 1);
-          g.lineTo(s * (r + 6), cy - r - 6);
+          g.moveTo(s * (r - 1), cy - r - 2);
+          g.lineTo(s * (r + 5), cy - r - 5);
           g.lineTo(s * (r + 5), cy - r + 3);
           g.closePath(); g.fill();
         });
-        g.beginPath(); g.arc(0, cy - r - 1, 2.6, 0, TAU); g.fill();
+        g.beginPath(); g.arc(0, cy - r - 2, 3, 0, TAU); g.fill();
         break;
-      case 'bald': // 正男：光头
-        g.fillStyle = 'rgba(255,255,255,.35)';
-        S.ellipse(g, -3, cy - r + 3, 4, 2.4); g.fill();
+      case 'bald': // 正男：光头 + 两小撮呆毛
         g.fillStyle = P.hair;
-        S.roundRect(g, -r + 1, cy - 2, 3, 4, 1.5); g.fill();
-        S.roundRect(g, r - 4, cy - 2, 3, 4, 1.5); g.fill();
+        // 头顶两撮小毛
+        [-3, 3].forEach(function (dx) {
+          g.beginPath();
+          g.moveTo(dx - 2, cy - r + 3);
+          g.quadraticCurveTo(dx + 1, cy - r - 5, dx + 4, cy - r + 3);
+          g.fill();
+        });
         break;
       case 'thin': // 阿呆：稀疏呆毛
         hairCap(g, P.hair, cy, r);
-        g.strokeStyle = P.hair; g.lineWidth = 2; g.lineCap = 'round';
+        g.strokeStyle = P.hair; g.lineWidth = 2.4; g.lineCap = 'round';
         [-4, 1, 6].forEach(function (dx, i) {
           g.beginPath();
           g.moveTo(dx, cy - r + 1);
-          g.quadraticCurveTo(dx + (i - 1) * 2, cy - r - 6, dx + (i - 1) * 4, cy - r - 8);
+          g.quadraticCurveTo(dx + (i - 1) * 2.5, cy - r - 7, dx + (i - 1) * 4, cy - r - 9);
           g.stroke();
         });
         g.fillStyle = P.hair;
@@ -186,58 +209,78 @@
 
   function drawFace(g, ch, cy, t, hurt) {
     const P = ch.palette;
-    const eyeY = cy + 1;
-    const blink = (t * 1.6 % 5) < 0.14;
+    const eyeY = cy + 0.5;
+    const blink = (t * 1.4 % 5) < 0.14;
 
-    // 眼睛
-    [-4.2, 4.6].forEach(function (ex, i) {
+    // 眼睛：更大更 Q
+    [-4.8, 5].forEach(function (ex, i) {
       if (blink) {
-        g.strokeStyle = '#22303f'; g.lineWidth = 1.6;
-        g.beginPath(); g.moveTo(ex - 3.4, eyeY); g.lineTo(ex + 3.4, eyeY); g.stroke();
+        g.strokeStyle = '#22303f'; g.lineWidth = 2;
+        g.beginPath(); g.moveTo(ex - 4, eyeY); g.lineTo(ex + 4, eyeY); g.stroke();
         return;
       }
+      // 眼白
       g.fillStyle = '#fff';
-      S.ellipse(g, ex, eyeY, 3.8, 4.8); g.fill();
-      g.strokeStyle = '#22303f'; g.lineWidth = 0.8; g.stroke();
+      S.ellipse(g, ex, eyeY, 4.5, 5.8); g.fill();
+      g.strokeStyle = '#22303f'; g.lineWidth = 1; g.stroke();
+      // 瞳孔
       g.fillStyle = '#22303f';
-      g.beginPath(); g.arc(ex + (ch.style === 'bald' ? 0.4 : 0.8), eyeY + 0.6, 2.2, 0, TAU); g.fill();
+      g.beginPath(); g.arc(ex + (ch.style === 'bald' ? 0.4 : 0.9), eyeY + 0.8, 2.6, 0, TAU); g.fill();
+      // 高光
       g.fillStyle = '#fff';
-      g.beginPath(); g.arc(ex - 0.6, eyeY - 0.8, 0.9, 0, TAU); g.fill();
+      g.beginPath(); g.arc(ex - 0.8, eyeY - 1.2, 1.4, 0, TAU); g.fill();
     });
 
-    // 小新的粗眉毛
+    // 眉毛（小新特别粗，其他人也带点特点）
     if (ch.style === 'spike') {
-      g.strokeStyle = '#2f2a28'; g.lineWidth = 2.2; g.lineCap = 'round';
-      g.beginPath(); g.moveTo(-8, cy - 5.5); g.lineTo(-2.5, cy - 6.5); g.stroke();
-      g.beginPath(); g.moveTo(2.5, cy - 6.5); g.lineTo(8, cy - 5.5); g.stroke();
+      g.strokeStyle = '#2f2a28'; g.lineWidth = 3; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(-9.5, cy - 7); g.quadraticCurveTo(-5, cy - 9, -1, cy - 7); g.stroke();
+      g.beginPath(); g.moveTo(1, cy - 7); g.quadraticCurveTo(5, cy - 9, 9.5, cy - 7); g.stroke();
+    } else if (ch.style === 'bowl') {
+      g.strokeStyle = P.hair; g.lineWidth = 1.4; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(-7, cy - 8); g.lineTo(-2.5, cy - 9); g.stroke();
+      g.beginPath(); g.moveTo(2.5, cy - 9); g.lineTo(7, cy - 8); g.stroke();
+    } else if (ch.style === 'thin') {
+      // 阿呆眉毛几乎看不见
+      g.strokeStyle = P.hair; g.lineWidth = 1; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(-6, cy - 7); g.lineTo(-3, cy - 6.5); g.stroke();
+      g.beginPath(); g.moveTo(3, cy - 6.5); g.lineTo(6, cy - 7); g.stroke();
+    } else {
+      g.strokeStyle = P.hair; g.lineWidth = 1.2; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(-6, cy - 7); g.quadraticCurveTo(-3, cy - 8, -1, cy - 7); g.stroke();
+      g.beginPath(); g.moveTo(1, cy - 7); g.quadraticCurveTo(3, cy - 8, 6, cy - 7); g.stroke();
     }
 
-    // 腮红
-    g.fillStyle = 'rgba(255,120,140,.35)';
-    S.ellipse(g, -8, cy + 5, 3, 2); g.fill();
-    S.ellipse(g, 8.6, cy + 5, 3, 2); g.fill();
+    // 腮红：更明显的粉色圆团
+    g.fillStyle = 'rgba(255,120,140,.45)';
+    S.ellipse(g, -9, cy + 5.5, 3.6, 2.4); g.fill();
+    S.ellipse(g, 9, cy + 5.5, 3.6, 2.4); g.fill();
 
     // 嘴
-    g.strokeStyle = '#22303f'; g.lineWidth = 1.4; g.lineCap = 'round';
+    g.strokeStyle = '#8c3b3b'; g.lineWidth = 1.6; g.lineCap = 'round';
     if (hurt) {
       g.fillStyle = '#8c3b3b';
-      S.ellipse(g, 0.3, cy + 8, 3.4, 3.8); g.fill();
+      S.ellipse(g, 0.3, cy + 8.5, 3.8, 4.2); g.fill();
+    } else if (ch.style === 'thin') {
+      // 阿呆小圆嘴
+      g.beginPath(); g.arc(0, cy + 7, 2.2, 0, TAU); g.stroke();
     } else {
       g.beginPath();
-      g.arc(0.3, cy + 5.5, 3.2, 0.25 * Math.PI, 0.75 * Math.PI);
+      g.arc(0.3, cy + 6, 3.6, 0.2 * Math.PI, 0.8 * Math.PI);
       g.stroke();
     }
 
     // 阿呆的鼻涕
     if (ch.style === 'thin') {
-      const wob = Math.sin(t * 3) * 1.6;
+      const wob = Math.sin(t * 3) * 1.8;
       g.fillStyle = 'rgba(190,230,255,.85)';
+      g.strokeStyle = 'rgba(120,180,210,.6)'; g.lineWidth = 0.6;
       g.beginPath();
-      g.moveTo(2.6, cy + 4);
-      g.quadraticCurveTo(6.5 + wob, cy + 8, 3.4, cy + 13);
-      g.quadraticCurveTo(0.5 + wob * 0.5, cy + 9, 2.6, cy + 4);
+      g.moveTo(2.8, cy + 5);
+      g.quadraticCurveTo(7 + wob, cy + 10, 3.6, cy + 15);
+      g.quadraticCurveTo(0.6 + wob * 0.5, cy + 10, 2.8, cy + 5);
       g.closePath();
-      g.fill();
+      g.fill(); g.stroke();
     }
   }
 
@@ -255,58 +298,83 @@
 
     if (o.invincible && Math.floor(t * 14) % 2 === 0) g.globalAlpha = 0.4;
 
+    // Q 版尺寸：头更大，身体更短
+    const headR = 13, headCY = -42;
+    const bodyTop = -28, bodyH = 14;
+    const footY = -4;
+    const outline = '#2f2a28';
+
     // 影子
-    g.fillStyle = 'rgba(0,0,0,.16)';
-    S.ellipse(g, 0, 1, 15, 4); g.fill();
+    g.fillStyle = 'rgba(0,0,0,.18)';
+    S.ellipse(g, 0, 1, 16, 4.5); g.fill();
 
-    // 腿 + 鞋
-    const legA = o.air ? -0.35 : swing * 0.9;
-    const legB = o.air ? 0.55 : -swing * 0.9;
-    g.strokeStyle = P.skin; g.lineWidth = 6; g.lineCap = 'round';
-    g.beginPath(); g.moveTo(-3, -13); g.lineTo(-3 + legA * 7, -3); g.stroke();
-    g.beginPath(); g.moveTo(3.5, -13); g.lineTo(3.5 + legB * 7, -3); g.stroke();
+    // 腿（短粗 + 圆球鞋）
+    const legA = o.air ? -0.45 : swing * 0.95;
+    const legB = o.air ? 0.65 : -swing * 0.95;
+    g.strokeStyle = P.skin; g.lineWidth = 5.5; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(-4, bodyTop + bodyH); g.lineTo(-5 + legA * 6, footY + 4); g.stroke();
+    g.beginPath(); g.moveTo(4, bodyTop + bodyH); g.lineTo(5 + legB * 6, footY + 4); g.stroke();
+
+    // 鞋
     g.fillStyle = P.shoes;
-    S.roundRect(g, -8 + legA * 7, -4, 10, 5.5, 2.5); g.fill();
-    S.roundRect(g, -1.5 + legB * 7, -4, 10, 5.5, 2.5); g.fill();
+    outlineCircle(g, -6 + legA * 6, footY, 5, P.shoes, outline, 1);
+    outlineCircle(g, 6 + legB * 6, footY, 5, P.shoes, outline, 1);
 
-    // 身体
-    const bodyTop = -31, bodyH = 21;
-    g.fillStyle = P.shirt;
-    S.roundRect(g, -11, bodyTop, 22, bodyH, 7); g.fill();
-    if (ch.style === 'twin') { // 裙子
+    // 裤子 / 裙子
+    if (ch.style === 'twin') {
       g.fillStyle = P.pants;
       g.beginPath();
-      g.moveTo(-11, bodyTop + bodyH - 6);
-      g.lineTo(11, bodyTop + bodyH - 6);
-      g.lineTo(13, bodyTop + bodyH + 2);
-      g.lineTo(-13, bodyTop + bodyH + 2);
-      g.closePath(); g.fill();
+      g.moveTo(-10, bodyTop + bodyH - 4);
+      g.lineTo(10, bodyTop + bodyH - 4);
+      g.lineTo(13, bodyTop + bodyH + 5);
+      g.lineTo(-13, bodyTop + bodyH + 5);
+      g.closePath();
+      g.fill();
+      strokeShape(g, outline, 1.2);
     } else {
       g.fillStyle = P.pants;
-      S.roundRect(g, -11, bodyTop + bodyH - 7, 22, 9, 4); g.fill();
+      S.roundRect(g, -11, bodyTop + bodyH - 7, 22, 10, 5); g.fill();
+      strokeShape(g, outline, 1.2);
     }
-    // 衣领
-    g.fillStyle = 'rgba(255,255,255,.75)';
+
+    // 身体（更短更圆）
+    g.fillStyle = P.shirt;
+    S.roundRect(g, -12, bodyTop, 24, bodyH, 9); g.fill();
+    strokeShape(g, outline, 1.2);
+    // 领子
+    g.fillStyle = 'rgba(255,255,255,.85)';
     g.beginPath();
-    g.moveTo(-5, bodyTop); g.lineTo(0, bodyTop + 7); g.lineTo(5, bodyTop);
+    g.moveTo(-6, bodyTop + 1); g.lineTo(0, bodyTop + 8); g.lineTo(6, bodyTop + 1);
     g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1; g.stroke();
 
-    // 手臂
-    g.strokeStyle = P.skin; g.lineWidth = 5;
+    // 手臂（粗短 + 圆球手）
+    g.strokeStyle = P.skin; g.lineWidth = 4.8; g.lineCap = 'round';
+    let handLX, handLY, handRX, handRY;
     if (o.air) {
-      g.beginPath(); g.moveTo(-9, bodyTop + 5); g.lineTo(-15, bodyTop - 4); g.stroke();
-      g.beginPath(); g.moveTo(9, bodyTop + 5); g.lineTo(15, bodyTop - 4); g.stroke();
+      g.beginPath(); g.moveTo(-10, bodyTop + 6); g.lineTo(-17, bodyTop - 5); g.stroke();
+      g.beginPath(); g.moveTo(10, bodyTop + 6); g.lineTo(17, bodyTop - 5); g.stroke();
+      handLX = -17; handLY = bodyTop - 5;
+      handRX = 17; handRY = bodyTop - 5;
     } else {
-      g.beginPath(); g.moveTo(-9, bodyTop + 5); g.lineTo(-9 - swing * 6, bodyTop + 14); g.stroke();
-      g.beginPath(); g.moveTo(9, bodyTop + 5); g.lineTo(9 + swing * 6, bodyTop + 14); g.stroke();
+      g.beginPath(); g.moveTo(-10, bodyTop + 6); g.lineTo(-10 - swing * 7, bodyTop + 15); g.stroke();
+      g.beginPath(); g.moveTo(10, bodyTop + 6); g.lineTo(10 + swing * 7, bodyTop + 15); g.stroke();
+      handLX = -10 - swing * 7; handLY = bodyTop + 15;
+      handRX = 10 + swing * 7; handRY = bodyTop + 15;
     }
-
-    // 头
-    const headR = 11, headCY = -41;
     g.fillStyle = P.skin;
-    g.beginPath(); g.arc(-9.5, headCY + 1, 3, 0, TAU); g.fill();
-    g.beginPath(); g.arc(9.5, headCY + 1, 3, 0, TAU); g.fill();
-    g.beginPath(); g.arc(0, headCY, headR, 0, TAU); g.fill();
+    fillCircle(g, handLX, handLY, 3.2);
+    fillCircle(g, handRX, handRY, 3.2);
+
+    // 头轮廓 + 耳朵
+    g.fillStyle = P.skin;
+    outlineCircle(g, 0, headCY, headR, P.skin, outline, 1.2);
+    g.fillStyle = P.skin;
+    g.beginPath(); g.arc(-headR + 1, headCY + 1, 3.2, 0, TAU); g.fill();
+    g.beginPath(); g.arc(headR - 1, headCY + 1, 3.2, 0, TAU); g.fill();
+    g.strokeStyle = outline; g.lineWidth = 1.2;
+    g.beginPath(); g.arc(-headR + 1, headCY + 1, 3.2, Math.PI * 0.6, Math.PI * 1.4); g.stroke();
+    g.beginPath(); g.arc(headR - 1, headCY + 1, 3.2, Math.PI * 1.6, Math.PI * 2.4); g.stroke();
 
     drawHair(g, ch, headCY, headR, t);
     drawFace(g, ch, headCY, t, o.hurt);

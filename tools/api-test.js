@@ -42,6 +42,16 @@ function req(method, path, body) {
   check('高分排在首位', board.data.entries[0].score === 99999 && board.data.entries[0].name === '高手',
     board.data.entries[0].name + '/' + board.data.entries[0].score);
 
+  // 同一 runId 多次提交应幂等更新，不重复上榜，分数取最高
+  await req('POST', '/api/leaderboard', { name: '幂等', charId: 'shin', level: 1, score: 1200, coins: 5, runId: 'run-abc-001' });
+  await req('POST', '/api/leaderboard', { name: '幂等改名', charId: 'shin', level: 1, score: 2200, coins: 8, runId: 'run-abc-001' });
+  await req('POST', '/api/leaderboard', { name: '幂等再改', charId: 'shin', level: 1, score: 1800, coins: 6, runId: 'run-abc-001' });
+  const boardIdem = await req('GET', '/api/leaderboard?limit=50');
+  const sameRun = boardIdem.data.entries.filter(function (e) { return e.runId === 'run-abc-001'; });
+  check('同一 runId 只保留一条记录', sameRun.length === 1, '实际 ' + sameRun.length + ' 条');
+  check('分数取三次中的最大值', sameRun[0] && sameRun[0].score === 2200, 'score=' + (sameRun[0] && sameRun[0].score));
+  check('昵称更新为最后一次提交', sameRun[0] && sameRun[0].name === '幂等再改', 'name=' + (sameRun[0] && sameRun[0].name));
+
   // 按关卡过滤
   const f = await req('GET', '/api/leaderboard?level=0&limit=10');
   check('按关卡过滤生效', f.data.entries.every(function (e) { return e.level === 0; }),

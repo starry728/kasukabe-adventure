@@ -29,7 +29,7 @@ html, body {
 /* ---------- HUD ---------- */
 #hud {
   position: absolute;
-  inset: 0 0 auto 0;
+  inset: 0;  /* 占满整个舞台，让内部绝对定位以舞台为参考 */
   padding: 10px 12px;
   pointer-events: none;
   font-size: clamp(11px, 1.5vw, 15px);

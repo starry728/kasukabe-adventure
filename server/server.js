@@ -76,7 +76,9 @@ function clampNum(v, min, max, dflt) {
 function board() { return store.read('leaderboard', { entries: [] }); }
 
 function submitScore(b) {
+  const runId = clampStr(b.runId, 36, '');
   const e = {
+    runId: runId,
     name: clampStr(b.name, 12, '无名氏'),
     charId: clampStr(b.charId, 16, 'shin'),
     level: clampNum(b.level, 0, 99, 0),
@@ -85,14 +87,31 @@ function submitScore(b) {
     at: Date.now()
   };
   const data = board();
-  data.entries.push(e);
+
+  // 同一 runId 的成绩幂等更新（自动提交/改名/点击不会重复上榜，分数取最高）
+  if (runId) {
+    let idx = -1;
+    for (let i = 0; i < data.entries.length; i++) {
+      if (data.entries[i].runId === runId) { idx = i; break; }
+    }
+    if (idx >= 0) {
+      const old = data.entries[idx];
+      e.score = Math.max(e.score, old.score); // 保留最高分
+      data.entries[idx] = e;
+    } else {
+      data.entries.push(e);
+    }
+  } else {
+    data.entries.push(e); // 兼容未带 runId 的旧客户端
+  }
+
   data.entries.sort(function (a, c) { return c.score - a.score || a.at - c.at; });
   if (data.entries.length > MAX_ENTRIES) data.entries.length = MAX_ENTRIES;
   store.write('leaderboard');
 
   let rank = 0;
   for (let i = 0; i < data.entries.length; i++) {
-    if (data.entries[i].at === e.at && data.entries[i].score === e.score) { rank = i + 1; break; }
+    if (data.entries[i].runId === e.runId && data.entries[i].score === e.score) { rank = i + 1; break; }
   }
   return { rank: rank, total: data.entries.length, entry: e };
 }
@@ -176,9 +195,9 @@ const server = http.createServer(function (req, res) {
         let list = board().entries;
         if (level !== null && isFinite(level)) list = list.filter(function (e) { return e.level === level; });
         return json(res, 200, {
-          entries: list.slice(0, limit).map(function (e, i) {
-            return { rank: i + 1, name: e.name, charId: e.charId, level: e.level, score: e.score, coins: e.coins, at: e.at };
-          }),
+        entries: list.slice(0, limit).map(function (e, i) {
+          return { rank: i + 1, name: e.name, charId: e.charId, level: e.level, score: e.score, coins: e.coins, at: e.at, runId: e.runId };
+        }),
           total: list.length
         });
       }

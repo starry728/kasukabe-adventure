@@ -144,7 +144,7 @@
         S.Audio.unlock();
         self.levelIndex = 0;
         self.totalScore = 0;
-        self.startLevel();
+        self.startLevel(true);
       });
 
       // 排行榜
@@ -168,7 +168,7 @@
         self.charId = p.charId || 'shin';
         self.levelIndex = p.levelIndex || 0;
         self.totalScore = p.totalScore || 0;
-        self.startLevel();
+        self.startLevel(true);
       });
 
       // 结算页：昵称与成绩提交
@@ -204,10 +204,15 @@
       $('btn-next').addEventListener('click', function () {
         self.totalScore += self.lastScore || 0;
         self.levelIndex++;
-        if (self.levelIndex >= S.LEVELS.length) self.levelIndex = 0;
-        self.startLevel();
+        if (self.levelIndex >= S.LEVELS.length) {
+          self.levelIndex = 0;
+          self.totalScore = 0;
+          self.startLevel(true);
+        } else {
+          self.startLevel(false);
+        }
       });
-      $('btn-retry').addEventListener('click', function () { self.startLevel(); });
+      $('btn-retry').addEventListener('click', function () { self.startLevel(false); });
       $('btn-home').addEventListener('click', function () {
         S.Audio.stopMusic();
         self.show('title');
@@ -238,9 +243,15 @@
       }
     },
 
-    startLevel: function () {
+    newRunId: function () {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    },
+
+    startLevel: function (newRun) {
       S.Audio.probeVoice(this.charId);
       this.show('game');
+      if (newRun || !this.runId) this.runId = this.newRunId();
+      this.game.runId = this.runId;
       this.game.start(this.levelIndex, this.charId);
       S.API.track({ type: 'start', charId: this.charId, level: this.levelIndex });
     },
@@ -253,6 +264,7 @@
       this.lastSubmit = { total: total, level: level };
       line.textContent = '成绩提交中…';
       S.API.submitScore({
+        runId: self.game.runId,
         name: S.API.getName() || '无名氏',
         charId: self.charId,
         level: level,
